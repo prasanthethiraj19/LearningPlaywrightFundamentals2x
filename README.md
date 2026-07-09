@@ -44,6 +44,7 @@ npx playwright test --debug
 ## Recent Changes
 
 - **Updated `playwright.config.ts`**: Changed `testDir` from `./e2e` to `./tests` to match the project structure where test files are located
+- **Fixed trailing semicolon in `237_BCP_Test_Options.spec.ts`**: Removed unnecessary semicolon after the `iPhone` device config object literal for consistent code style
 
 ## Viewing the Report
 
