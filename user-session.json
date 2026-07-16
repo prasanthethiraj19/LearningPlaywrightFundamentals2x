@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "https://app.thetestingacademy.com",
+      "localStorage": [
+        {
+          "name": "tta-cart-user",
+          "value": "\"standard_user\""
+        }
+      ]
+    }
+  ]
+}
