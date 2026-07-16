@@ -43,15 +43,36 @@ npx playwright test --debug
 
 ## Recent Changes
 
-- **Updated `playwright.config.ts`**: Changed `testDir` from `./e2e` to `./tests` to match the project structure where test files are located
-- **Fixed trailing semicolon in `237_BCP_Test_Options.spec.ts`**: Removed unnecessary semicolon after the `iPhone` device config object literal for consistent code style
+- **Added custom HTML reporter** — `utils/CustomReporter.ts` generates detailed HTML reports with step-level breakdown, screenshots, videos, and traces. Open `Custom Report/index.html` to view the latest report.
+- **Allure integration** — Added `allure-playwright` reporter alongside the custom reporter for Allure dashboard support.
+- **Screenshots, video & trace** — Set to `'on'` for all tests (captured for every run, not just failures).
+- **Custom Report folder** — All generated reports, screenshots, videos, and traces are stored in the `Custom Report/` directory.
+- **New test modules**:
+  - `tests/03_Locators_Commands/` — locator strategies (XPath, getByRole, getByTestId, press sequences, page objects)
+  - `tests/04_Session_Storage/` — session storage and auth state reuse (247, 248)
+- **`test.step()` integration** — Tests use `test.step()` blocks, which the custom reporter tracks individually with pass/fail status and timing.
+- **`playwright.config.ts` updates**: `testDir` changed from `./e2e` to `./tests`, report output folder renamed, screenshot/video/trace enabled.
 
 ## Viewing the Report
 
-After a run, open the HTML report:
+### Custom HTML Report (detailed)
+
+```bash
+# Open the latest custom report
+start Custom Report/index.html
+```
+
+### Playwright HTML Report (built-in)
 
 ```bash
 npx playwright show-report
+```
+
+### Allure Report
+
+```bash
+npx allure generate allure-results --clean
+npx allure open
 ```
 
 ## Project Structure
@@ -61,10 +82,15 @@ npx playwright show-report
 ├── tests/
 │   ├── 01_Basics/                    # Test anatomy, annotations (skip/only/fail/slow)
 │   ├── 02_First_tests/               # Browser → Context → Page (BCP) hierarchy
-│   ├── 03_Locators_Commands/ … 23_Advance_Framework/   # Curriculum modules (scaffolded, WIP)
+│   ├── 03_Locators_Commands/         # Locator strategies (XPath, getByRole, etc.)
+│   ├── 04_Session_Storage/           # Session / auth state reuse tests
 │   ├── Template.spec.ts              # Empty spec scaffold, copy for new tests
 │   └── example.spec.ts               # Sample: title check + "Get started" navigation
-├── playwright.config.ts    # Playwright configuration
+├── utils/
+│   └── CustomReporter.ts             # Custom HTML reporter with step tracking
+├── Custom Report/                    # Generated reports (screenshots, videos, traces)
+├── allure-results/                   # Allure report data
+├── playwright.config.ts              # Playwright configuration
 ├── package.json
 └── .gitignore
 ```
@@ -147,11 +173,11 @@ Defined in `playwright.config.ts`:
 - `testDir: './tests'` — where specs live
 - `testMatch: ['tests/**/*.spec.ts']` — recurses into every numbered module folder
 - `fullyParallel: true` — run test files in parallel
-- `reporter: 'html'` — generate an HTML report
-- `trace: 'on'`, `screenshot: 'on'`, `video: 'on'` — full debug artifacts for every run (heavier, dial back for CI)
-- `headless: false`, `viewport: 1920x1080` — watch tests run during course recording
-- Projects: Firefox active; Chromium and WebKit currently commented out
+- `reporter: [["line"], ["allure-playwright"], ["./utils/CustomReporter.ts"]]` — dual reporting (console + Allure + custom HTML)
+- `trace: 'on'`, `screenshot: 'on'`, `video: 'on'` — full debug artifacts for every run
+- Projects: Chromium active; Firefox and WebKit currently commented out
 - CI-aware retries and workers (`process.env.CI`)
+- Custom HTML report written to `Custom Report/` with per-step breakdown, screenshots, videos, and traces
 
 ## Learn More
 
