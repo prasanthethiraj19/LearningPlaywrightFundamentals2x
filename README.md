@@ -50,8 +50,13 @@ npx playwright test --debug
 - **New test modules**:
   - `tests/03_Locators_Commands/` — locator strategies (XPath, getByRole, getByTestId, press sequences, page objects)
   - `tests/04_Session_Storage/` — session storage and auth state reuse (247, 248)
+  - `tests/06_Multiple_Element_/` — handling multiple elements with `allInnerTexts()`, `all()`, `getByTestId()`, and `.filter()` with `hasText`
+  - `tests/07_WebTables/` — dynamic XPath web table traversal, pagination loops, `filter({ hasText })` row lookups, reusable pagination functions
 - **`test.step()` integration** — Tests use `test.step()` blocks, which the custom reporter tracks individually with pass/fail status and timing.
 - **`playwright.config.ts` updates**: `testDir` changed from `./e2e` to `./tests`, report output folder renamed, screenshot/video/trace enabled.
+- **New test modules (Round 2)**:
+  - `tests/06_Multiple_Element_/` — two specs demonstrating multiple element handling: `allInnerTexts()` + loop filtering, and the faster `getByTestId()`/`.filter({ hasText })` approach for element selection
+  - `tests/07_WebTables/` — 7 specs covering web table traversal with dynamic XPath construction (`252`), structured table extraction (`253`), `.filter({ hasText })` locator matching (`254`), checkbox selection via preceding-sibling XPath (`255`), paginated row lookup with while-loop (`256`), paginated email scraping across pages (`257`), and reusable pagination functions (`258`)
 
 ## Viewing the Report
 
@@ -84,6 +89,8 @@ npx allure open
 │   ├── 02_First_tests/               # Browser → Context → Page (BCP) hierarchy
 │   ├── 03_Locators_Commands/         # Locator strategies (XPath, getByRole, etc.)
 │   ├── 04_Session_Storage/           # Session / auth state reuse tests
+│   ├── 06_Multiple_Element_/         # Handling multiple elements (allInnerTexts, filter, getByTestId)
+│   ├── 07_WebTables/                 # Dynamic XPath, pagination, row filter functions
 │   ├── Template.spec.ts              # Empty spec scaffold, copy for new tests
 │   └── example.spec.ts               # Sample: title check + "Get started" navigation
 ├── utils/
