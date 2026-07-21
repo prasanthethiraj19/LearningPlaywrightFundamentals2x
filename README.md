@@ -59,7 +59,7 @@ npx playwright test --debug
   - `tests/07_WebTables/` — 7 specs covering web table traversal with dynamic XPath construction (`252`), structured table extraction (`253`), `.filter({ hasText })` locator matching (`254`), checkbox selection via preceding-sibling XPath (`255`), paginated row lookup with while-loop (`256`), paginated email scraping across pages (`257`), and reusable pagination functions (`258`)
 - **New test modules (Round 3)**:
   - `tests/08_Web_Select_Frames_Iframe/` — custom dropdown interactions (`259`, `260`), advanced React-Select handling (`261`) covering single, multi, grouped, creatable, and async select boxes
-  - `tests/Daily_Task/` — daily challenge scripts (SpiceJet ticket booking with autocomplete popup handling, MakeMyTrip automation attempts)
+  - `tests/Daily_Task/` — daily challenge scripts (SpiceJet ticket booking with autocomplete, date selection, console-logging selected values)
 - **Custom Reporter improvements**:
   - Compact 11-column table (removed Author, Priority, End Time) for better fit
   - Icon-only action links (Screenshot/Video/Trace) with hover effects

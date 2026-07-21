@@ -17,5 +17,7 @@ test('SpiceJet Ticket Booking', async ({ page }) => {
     console.log(fromLoca);
     const toLoca = await page.getByTestId('to-testID-destination').getByRole('textbox').inputValue();
     console.log(toLoca);
+    const departureDate = await page.getByTestId('departure-date-dropdown-label-test-id').textContent();
+    console.log(departureDate);
 
 });
