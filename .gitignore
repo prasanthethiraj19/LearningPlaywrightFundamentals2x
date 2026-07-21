@@ -8,3 +8,13 @@ node_modules/
 /playwright/.auth/
 test_output.txt
 allure-results/
+
+# Custom Report artifacts
+/Custom Report/report_*.html
+/Custom Report/screenshots/
+/Custom Report/videos/
+/Custom Report/traces/
+
+# Keep index.html and history.html in Custom Report
+!/Custom Report/index.html
+!/Custom Report/history.html

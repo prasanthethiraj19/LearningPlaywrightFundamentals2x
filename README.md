@@ -57,6 +57,16 @@ npx playwright test --debug
 - **New test modules (Round 2)**:
   - `tests/06_Multiple_Element_/` — two specs demonstrating multiple element handling: `allInnerTexts()` + loop filtering, and the faster `getByTestId()`/`.filter({ hasText })` approach for element selection
   - `tests/07_WebTables/` — 7 specs covering web table traversal with dynamic XPath construction (`252`), structured table extraction (`253`), `.filter({ hasText })` locator matching (`254`), checkbox selection via preceding-sibling XPath (`255`), paginated row lookup with while-loop (`256`), paginated email scraping across pages (`257`), and reusable pagination functions (`258`)
+- **New test modules (Round 3)**:
+  - `tests/08_Web_Select_Frames_Iframe/` — custom dropdown interactions (`259`, `260`), advanced React-Select handling (`261`) covering single, multi, grouped, creatable, and async select boxes
+  - `tests/Daily_Task/` — daily challenge scripts (SpiceJet ticket booking with autocomplete popup handling, MakeMyTrip automation attempts)
+- **Custom Reporter improvements**:
+  - Compact 11-column table (removed Author, Priority, End Time) for better fit
+  - Icon-only action links (Screenshot/Video/Trace) with hover effects
+  - Live **LIVE** badge with blinking dot during real-time report mode
+  - File column shows only filename with full path on hover
+  - Fixed terminal console table border alignment with visual-width-aware padding for emoji characters
+  - `overflow-x: auto` on table container for responsive horizontal scroll
 
 ## Viewing the Report
 
@@ -91,6 +101,8 @@ npx allure open
 │   ├── 04_Session_Storage/           # Session / auth state reuse tests
 │   ├── 06_Multiple_Element_/         # Handling multiple elements (allInnerTexts, filter, getByTestId)
 │   ├── 07_WebTables/                 # Dynamic XPath, pagination, row filter functions
+│   ├── 08_Web_Select_Frames_Iframe/  # Custom dropdown, React-Select, iframe interactions
+│   ├── Daily_Task/                   # Daily challenge scripts
 │   ├── Template.spec.ts              # Empty spec scaffold, copy for new tests
 │   └── example.spec.ts               # Sample: title check + "Get started" navigation
 ├── utils/

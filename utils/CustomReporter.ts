@@ -82,6 +82,7 @@ class CustomReporter implements Reporter {
     private testCounter: number = 0;
     private runningTests: Map<string, TestData> = new Map();
     private completedTestIds: Set<string> = new Set();
+    private isRealTime: boolean = false;
 
     onBegin(config: FullConfig, suite: Suite): void {
         const now = new Date();
@@ -91,12 +92,13 @@ class CustomReporter implements Reporter {
         this.startTime = new Date();
         const totalTests = suite.allTests().length;
 
+        const box = (content: string) => `║${this.padVisual(content.replace(/\uFE0F/g, ''), 64)}║`;
         console.log('\n╔════════════════════════════════════════════════════════════════╗');
-        console.log('║        🎭 PLAYWRIGHT AUTOMATION - REAL-TIME REPORT         ║');
+        console.log(box('        🎭 PLAYWRIGHT AUTOMATION - REAL-TIME REPORT'));
         console.log('╠════════════════════════════════════════════════════════════════╣');
-        console.log(`║  📅 Started: ${this.startTime.toLocaleString().padEnd(47)}║`);
-        console.log(`║  📊 Total Tests: ${String(totalTests).padEnd(44)}║`);
-        console.log(`║  🌐 Environment: ${(process.env.TEST_ENV || 'UAT').padEnd(44)}║`);
+        console.log(box(`  📅 Started: ${this.startTime.toLocaleString()}`));
+        console.log(box(`  📊 Total Tests: ${totalTests}`));
+        console.log(box(`  🌐 Environment: ${process.env.TEST_ENV || 'UAT'}`));
         console.log('╚════════════════════════════════════════════════════════════════╝\n');
 
         this.initializeLiveReport();
@@ -387,6 +389,7 @@ class CustomReporter implements Reporter {
     }
 
     private generateHTMLRealTime(): string {
+        this.isRealTime = true;
         const inProgressTests = Array.from(this.runningTests.values());
         const originalResults = this.testResults;
         this.testResults = [...originalResults, ...inProgressTests];
@@ -394,6 +397,7 @@ class CustomReporter implements Reporter {
         let html = this.generateHTML();
 
         this.testResults = originalResults;
+        this.isRealTime = false;
 
         html = html.replace(
             '<meta charset="UTF-8">',
@@ -410,16 +414,17 @@ class CustomReporter implements Reporter {
             ? ((this.suiteStats.passed / this.suiteStats.total) * 100).toFixed(1)
             : '0';
 
+        const box = (content: string) => `║${this.padVisual(content, 64)}║`;
         console.log('\n╔════════════════════════════════════════════════════════════════╗');
-        console.log('║                    📊 FINAL TEST SUMMARY                        ║');
+        console.log(box('                    📊 FINAL TEST SUMMARY'));
         console.log('╠════════════════════════════════════════════════════════════════╣');
-        console.log(`║  ✅ Passed:  ${String(this.suiteStats.passed).padEnd(49)}║`);
-        console.log(`║  ❌ Failed:  ${String(this.suiteStats.failed).padEnd(49)}║`);
-        console.log(`║  ⏭️  Skipped: ${String(this.suiteStats.skipped).padEnd(49)}║`);
-        console.log(`║  📊 Total:   ${String(this.suiteStats.total).padEnd(49)}║`);
+        console.log(box(`  ✅ Passed:  ${this.suiteStats.passed}`));
+        console.log(box(`  ❌ Failed:  ${this.suiteStats.failed}`));
+        console.log(box(`  ⏭️  Skipped: ${this.suiteStats.skipped}`));
+        console.log(box(`  📊 Total:   ${this.suiteStats.total}`));
         console.log('╠════════════════════════════════════════════════════════════════╣');
-        console.log(`║  ⏱️  Duration: ${duration.padEnd(47)}║`);
-        console.log(`║  📈 Pass Rate: ${(passRate + '%').padEnd(47)}║`);
+        console.log(box(`  ⏱️  Duration: ${duration}`));
+        console.log(box(`  📈 Pass Rate: ${passRate}%`));
         console.log('╚════════════════════════════════════════════════════════════════╝');
 
         console.log('\n📊 Generating HTML Report...');
@@ -447,6 +452,38 @@ class CustomReporter implements Reporter {
             return `${minutes}m ${remainingSeconds}s`;
         }
         return `${remainingSeconds}s`;
+    }
+
+    // Terminal visual width — accounts for CJK wide chars and emoji
+    private visualLen(s: string): number {
+        let len = 0;
+        for (const ch of s) {
+            const cp = ch.codePointAt(0) || 0;
+            if (cp === 0xFE0F || cp === 0x200D || cp === 0xFE0E) continue;
+            // ⏭ U+23ED and ⏱ U+23F1 are 1 column in Windows Terminal (exclude from Misc Technical)
+            const wide =
+                (cp >= 0x1100 && cp <= 0x115F) ||  // Hangul Jamo
+                (cp >= 0x2329 && cp <= 0x232A) ||  // Misc Technical brackets
+                (cp >= 0x2300 && cp <= 0x23FF && cp !== 0x23ED && cp !== 0x23F1) ||  // Misc Technical (except ⏭⏱)
+                (cp >= 0x2600 && cp <= 0x27BF) ||  // Misc Symbols + Dingbats (✅❌★☺ etc.)
+                (cp >= 0x2E80 && cp <= 0x2FFF) ||  // CJK Radicals
+                (cp >= 0x3000 && cp <= 0x33FF) ||  // CJK Symbols & Punctuation
+                (cp >= 0x3400 && cp <= 0x4DBF) ||  // CJK Unified A
+                (cp >= 0x4E00 && cp <= 0x9FFF) ||  // CJK Unified
+                (cp >= 0xA000 && cp <= 0xA4CF) ||  // Yi
+                (cp >= 0xAC00 && cp <= 0xD7AF) ||  // Hangul Syllables
+                (cp >= 0xF900 && cp <= 0xFAFF) ||  // CJK Compatibility
+                (cp >= 0xFE10 && cp <= 0xFE19) ||  // Vertical Forms
+                (cp >= 0xFE30 && cp <= 0xFE6F) ||  // CJK Compatibility Forms
+                (cp >= 0xFF01 && cp <= 0xFF60) ||  // Fullwidth Forms
+                (cp >= 0xFFE0 && cp <= 0xFFE6) ||  // Fullwidth Signs
+                cp >= 0x1F000;                       // Supplemental (emoji, etc.)
+            len += wide ? 2 : 1;
+        }
+        return len;
+    }
+    private padVisual(s: string, target: number): string {
+        return s + ' '.repeat(Math.max(0, target - this.visualLen(s)));
     }
 
     private formatVideoTime(ms: number): string {
@@ -655,19 +692,23 @@ class CustomReporter implements Reporter {
         const browserName = this.config.projects[0]?.name || 'chrome';
         const platform = process.platform === 'darwin' ? 'Mac' : process.platform === 'win32' ? 'Windows' : 'Linux';
 
+        const liveBadge = this.isRealTime
+            ? '<span class="live-badge"><span class="live-dot"></span> LIVE</span>'
+            : '';
+
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automation Report</title>
+    <title>Automation Report${this.isRealTime ? ' (LIVE)' : ''}</title>
     <style>
         ${this.getStyles()}
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎭 Automation Report</h1>
+        <h1>🎭 Automation Report ${liveBadge}</h1>
         <p class="header-subtitle">Playwright Run Report</p>
     </div>
 
@@ -800,12 +841,9 @@ class CustomReporter implements Reporter {
                     <th>S.No</th>
                     <th>Suite</th>
                     <th>Test Name</th>
-                    <th>Author</th>
-                    <th>Priority</th>
                     <th>Tags</th>
                     <th>File</th>
                     <th>Start Time</th>
-                    <th>End Time</th>
                     <th>Duration</th>
                     <th>Status</th>
                     <th>Screenshot</th>
@@ -823,15 +861,10 @@ class CustomReporter implements Reporter {
             const duration = this.formatDuration(test.duration);
             const tagsData = test.tags.join(',').toLowerCase();
 
-            const testGroup = test.tags.find(t => t.includes('P0') || t.includes('P1') || t.includes('P2')) ||
-                test.describePath[0] || 'E2E';
-
-            const author = process.env.TEST_AUTHOR || 'QA';
-
             const testStartTime = new Date(this.startTime.getTime());
-            const testEndTime = new Date(testStartTime.getTime() + test.duration);
 
             const firstScreenshot = test.screenshots[0]?.path || (test.steps.find(s => s.screenshot)?.screenshot) || '';
+            const shortFile = test.location.split('/').pop()?.split('\\').pop()?.split(':')[0] || test.location;
 
             html += `
                 <tr class="test-row ${statusClass}" data-test-id="${test.id}" data-tags="${tagsData}">
@@ -840,26 +873,23 @@ class CustomReporter implements Reporter {
                     <td class="col-testname">
                         <span class="test-name-link" onclick="toggleTestDetail('${test.id}')">${this.escapeHtml(test.title)}</span>
                     </td>
-                    <td class="col-author">${author}</td>
-                    <td class="col-group">${this.escapeHtml(testGroup)}</td>
                     <td class="col-tags">${test.tags.map(t => `<span class="tag">${t}</span>`).join(' ')}</td>
-                    <td class="col-file">${this.escapeHtml(test.location)}</td>
+                    <td class="col-file" title="${this.escapeHtml(test.location)}">${this.escapeHtml(shortFile)}</td>
                     <td class="col-starttime">${this.formatTime(testStartTime)}</td>
-                    <td class="col-endtime">${this.formatTime(testEndTime)}</td>
                     <td class="col-duration">${duration}</td>
                     <td class="col-status"><span class="status-badge ${statusClass}">${statusText}</span></td>
                     <td class="col-screenshot">
-                        ${firstScreenshot ? `<a href="${firstScreenshot}" target="_blank" class="screenshot-link">📷 View</a>` : 'N/A'}
+                        ${firstScreenshot ? `<a href="${firstScreenshot}" target="_blank" class="screenshot-link">📷</a>` : '<span class="na-cell">—</span>'}
                     </td>
                     <td class="col-video">
-                        ${test.video ? `<a href="${test.video}" target="_blank" class="video-link-cell">▶️ Play</a>` : 'N/A'}
+                        ${test.video ? `<a href="${test.video}" target="_blank" class="video-link-cell">▶️</a>` : '<span class="na-cell">—</span>'}
                     </td>
                     <td class="col-trace">
-                        ${test.trace ? `<a href="${test.trace}" target="_blank" class="trace-link-cell">📁 View</a>` : 'N/A'}
+                        ${test.trace ? `<a href="${test.trace}" target="_blank" class="trace-link-cell">📁</a>` : '<span class="na-cell">—</span>'}
                     </td>
                 </tr>
                 <tr class="test-detail-row" id="detail-row-${test.id}" style="display: none;">
-                    <td colspan="14">
+                    <td colspan="11">
                         <div class="test-detail" id="detail-${test.id}">
                             ${this.generateTestDetailPanel(test)}
                         </div>
@@ -1137,6 +1167,39 @@ class CustomReporter implements Reporter {
             position: relative;
         }
 
+        /* Live Badge */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            vertical-align: middle;
+            margin-left: 12px;
+            animation: livePulse 2s ease-in-out infinite;
+        }
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #ff4444;
+            border-radius: 50%;
+            display: inline-block;
+            animation: dotBlink 1.5s ease-in-out infinite;
+        }
+        @keyframes dotBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        @keyframes livePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+        }
+        .na-cell { color: var(--gray-300); font-size: 16px; }
+
         /* ========== CONTAINER ========== */
         .container {
             max-width: 1600px;
@@ -1319,7 +1382,8 @@ class CustomReporter implements Reporter {
             background: white;
             border-radius: var(--radius);
             box-shadow: var(--shadow-lg);
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .test-table {
             width: 100%;
@@ -1373,16 +1437,14 @@ class CustomReporter implements Reporter {
 
         /* Column widths */
         .col-sno { width: 50px; text-align: center; font-weight: 600; color: var(--gray-400); }
-        .col-suite { min-width: 120px; }
-        .col-testname { min-width: 280px; }
-        .col-author { width: 80px; }
-        .col-group { width: 80px; }
-        .col-tags { min-width: 120px; }
-        .col-file { min-width: 140px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gray-500); }
-        .col-starttime, .col-endtime { width: 160px; font-size: 12px; color: var(--gray-500); }
-        .col-duration { width: 80px; text-align: center; font-weight: 600; }
-        .col-status { width: 100px; text-align: center; }
-        .col-screenshot, .col-video, .col-trace { width: 80px; text-align: center; }
+        .col-suite { min-width: 100px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-testname { min-width: 220px; }
+        .col-tags { min-width: 100px; }
+        .col-file { min-width: 120px; max-width: 180px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gray-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .col-starttime { width: 140px; font-size: 12px; color: var(--gray-500); white-space: nowrap; }
+        .col-duration { width: 70px; text-align: center; font-weight: 600; }
+        .col-status { width: 90px; text-align: center; }
+        .col-screenshot, .col-video, .col-trace { width: 60px; text-align: center; }
 
         .test-name-link {
             color: var(--dark);
@@ -1427,12 +1489,12 @@ class CustomReporter implements Reporter {
         .screenshot-link, .video-link-cell, .trace-link-cell {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             text-decoration: none;
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 16px;
             transition: all 0.2s;
         }
         .screenshot-link {
